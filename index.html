@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Siswa</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6f9;
+}
+
+.header{
+background:#007BFF;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{padding:10px;}
+
+.card{
+background:white;
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:5px 0;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin:3px 0;
+border:none;
+border-radius:5px;
+}
+
+.btn-primary{background:#007BFF;color:white;}
+.btn-success{background:#28a745;color:white;}
+.btn-warning{background:#ffc107;}
+.btn-danger{background:#dc3545;color:white;}
+.btn-dark{background:#343a40;color:white;}
+
+.table-container{overflow-x:auto;}
+
+table{
+min-width:500px;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:6px;
+font-size:12px;
+}
+
+th{
+background:#007BFF;
+color:white;
+}
+
+@media(min-width:768px){
+.container{max-width:800px;margin:auto;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">DATA PESERTA DIDIK</div>
+
+<div class="container">
+
+<div class="card">
+<h3>Pencarian</h3>
+<input id="search" placeholder="Cari nama / NISN..." onkeyup="renderTable()">
+</div>
+
+<div class="card">
+<h3>Form</h3>
+
+<input id="nis" placeholder="NIS">
+<input id="nisn" placeholder="NISN">
+<input id="nama" placeholder="Nama">
+<input id="jk" placeholder="L/P">
+<input id="tempat" placeholder="Tempat Lahir">
+<input id="tanggal" placeholder="Tanggal Lahir">
+<input id="alamat" placeholder="Alamat">
+
+<button class="btn-success" onclick="tambah()">Tambah</button>
+<button class="btn-warning" onclick="editData()">Edit/Simpan</button>
+<button class="btn-danger" onclick="hapus()">Hapus</button>
+<button class="btn-dark" onclick="clearForm()">Bersihkan</button>
+<button class="btn-primary" onclick="downloadCSV()">Download</button>
+
+</div>
+
+<div class="card">
+<h3>Data Siswa</h3>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>NIS</th>
+<th>NISN</th>
+<th>Nama</th>
+<th>JK</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+var dataSiswa = [];
+
+// ================= LOAD =================
+function load(){
+let d = localStorage.getItem("dataSiswa");
+if(d){
+dataSiswa = JSON.parse(d);
+}
+renderTable();
+}
+
+// ================= SAVE =================
+function save(){
+localStorage.setItem("dataSiswa", JSON.stringify(dataSiswa));
+}
+
+// ================= TAMPIL =================
+function renderTable(){
+
+let key = search.value.toLowerCase();
+let tbody = "";
+
+dataSiswa.forEach((d,i)=>{
+
+if(
+d.nama.toLowerCase().includes(key) ||
+d.nisn.includes(key)
+){
+
+tbody += `
+<tr>
+<td>${d.nis}</td>
+<td>${d.nisn}</td>
+<td>${d.nama}</td>
+<td>${d.jk}</td>
+<td><button onclick="pilih(${i})">Pilih</button></td>
+</tr>`;
+}
+
+});
+
+document.getElementById("tbody").innerHTML = tbody;
+}
+
+// ================= PILIH =================
+function pilih(i){
+let d = dataSiswa[i];
+
+nis.value = d.nis;
+nisn.value = d.nisn;
+nama.value = d.nama;
+jk.value = d.jk;
+tempat.value = d.tempat;
+tanggal.value = d.tanggal;
+alamat.value = d.alamat;
+}
+
+// ================= TAMBAH =================
+function tambah(){
+
+dataSiswa.push({
+nis:nis.value,
+nisn:nisn.value,
+nama:nama.value,
+jk:jk.value,
+tempat:tempat.value,
+tanggal:tanggal.value,
+alamat:alamat.value
+});
+
+save();
+renderTable();
+clearForm();
+}
+
+// ================= EDIT =================
+function editData(){
+
+let idx = dataSiswa.findIndex(d => d.nisn === nisn.value);
+
+if(idx === -1){
+alert("Data tidak ditemukan");
+return;
+}
+
+dataSiswa[idx] = {
+nis:nis.value,
+nisn:nisn.value,
+nama:nama.value,
+jk:jk.value,
+tempat:tempat.value,
+tanggal:tanggal.value,
+alamat:alamat.value
+};
+
+save();
+renderTable();
+clearForm();
+}
+
+// ================= HAPUS =================
+function hapus(){
+
+dataSiswa = dataSiswa.filter(d => d.nisn !== nisn.value);
+
+save();
+renderTable();
+clearForm();
+}
+
+// ================= CLEAR =================
+function clearForm(){
+document.querySelectorAll("input").forEach(i => i.value="");
+}
+
+// ================= DOWNLOAD =================
+function downloadCSV(){
+
+let csv = "";
+
+// ================= HEADER =================
+csv += "DATA SISWA\n";
+csv += "NO;NIS;NISN;NAMA;JK;TEMPAT;TANGGAL;ALAMAT\n";
+
+// ================= DATA =================
+dataSiswa.forEach((d,i)=>{
+
+let row = `${i+1};${d.nis};${d.nisn};${d.nama};${d.jk};${d.tempat};${d.tanggal};${d.alamat}`;
+
+csv += row + "\n";
+
+});
+
+// ================= KIRIM KE ANDROID =================
+Android.downloadCSV(csv);
+
+}
+
+
+// ================= START =================
+window.onload = load;
+
+</script>
+
+</body>
+</html>
